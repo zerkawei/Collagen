@@ -3,17 +3,20 @@ using System;
 using System.Reflection;
 namespace Collagen;
 
-public interface IAdapter { public CollagenObject Object { get; set; } }
-public class CollagenAdapter : IAdapter
+public interface IAdapter { public CollagenObject Object { get; } }
+public struct CollagenAdapter : IAdapter
 {
-	public CollagenObject Object { get; set; }
+	public CollagenObject Object { get; }
 
-	public this() {}
+	public this() { Object = .(null, null); }
 	public this(CollagenObject object) { Object = object; }
 
 	public static Dictionary<uint64, AdapterInfo> Convertors = new .() ~ DeleteDictionaryAndValues!(_);
   	public static CollagenObject Box<T>(T object)   where T : interface => .(Convertors[GetID(typeof(T))].BoxInterface, Internal.UnsafeCastToPtr(object));
-	public static T Adapt<T>(CollagenObject object) where T : interface => (T)Convertors[object.Type.typeID].Create(object);
+	public static T Adapt<T>(CollagenObject object) where T : interface => (Convertors[GetID(typeof(T))].BoxInterface == object.Type) ?
+		(T)Internal.UnsafeCastToObject(object.Ptr) :
+		(T)Convertors[object.Type.typeID].Create(object);
+		
 	[Inline] public static uint64 GetID(Type T) => (uint64)(T.GetFullName(..scope .()).GetHashCode()); //(uint64)T.GetTypeId();
 }
 
@@ -29,7 +32,7 @@ public class AdapterInfo
 	}
 }
 
-[AttributeUsage(.Class)]
+[AttributeUsage(.Struct)]
 public struct CollagenAdapterAttribute<T, N> : Attribute, IOnTypeInit where T : interface where N : CollagenInterface
 {
 	[Comptime]
@@ -39,7 +42,7 @@ public struct CollagenAdapterAttribute<T, N> : Attribute, IOnTypeInit where T : 
 		Compiler.EmitAddInterface(type, typeof(IAdapter));
 
 		Compiler.EmitTypeBody(type, scope $"public static this() \{ CollagenAdapter.Convertors.Add({CollagenAdapter.GetID(typeof(T))}, new .(=> Create, new {typeof(N).GetFullName(.. scope .())}({CollagenAdapter.GetID(typeof(T))})));\}\n");
-		Compiler.EmitTypeBody(type, "public this(CollagenObject obj) : base(obj){}; public static IAdapter Create(CollagenObject obj) => new Self(obj);\n");
+		Compiler.EmitTypeBody(type, "public this(CollagenObject obj) : base(obj){}; public static IAdapter Create(CollagenObject obj) => Self(obj);\n");
 
 		for(let m in typeof(T).GetMethods())
 		{
