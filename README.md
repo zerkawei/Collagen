@@ -3,13 +3,9 @@
 
 ## Usage :
 ```c#
-interface ITest
-{
-	...
-}
+interface ITest { ... }
+class Test : ITest { ... }
 
-[CollagenInterface<ITest>, CRepr]
-struct TestForeign : CollagenInterface {}
-[CollagenAdapter<ITest, TestForeign>, AlwaysInclude(AssumeInstantiated=true)]
-struct TestAdapter : CollagenAdapter {} 
+let obj = CollagenObject<ITest>.Box() // Boxes the object into a CRepr struct
+let adp = Collagen.Adapt<IText>(obj)  // Adapts the foreign object or returns the Beef object
 ```
