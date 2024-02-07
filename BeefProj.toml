@@ -4,3 +4,6 @@ FileVersion = 1
 Name = "Collagen"
 TargetType = "BeefLib"
 StartupObject = "Collagen.Program"
+
+[Configs.Debug.Win64]
+BuildKind = "StaticLib"

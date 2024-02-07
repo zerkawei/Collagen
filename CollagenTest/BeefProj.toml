@@ -1,0 +1,6 @@
+FileVersion = 1
+Dependencies = {corlib = "*", Collagen = "*"}
+
+[Project]
+Name = "CollagenTest"
+StartupObject = "CollagenTest.Program"

@@ -2,3 +2,6 @@
 BeefSpace_User.toml
 recovery/*
 build/*
+*.a
+*.o
+*.dll

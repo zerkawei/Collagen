@@ -1,5 +1,11 @@
 FileVersion = 1
-Projects = {Collagen = {Path = "."}}
+Projects = {CollagenTest = {Path = "CollagenTest"}, Collagen = {Path = "."}}
 
 [Workspace]
-StartupProject = "Collagen"
+StartupProject = "CollagenTest"
+
+[Configs.Test.Win32]
+ConfigSelections = {CollagenTest = {Config = "Debug"}}
+
+[Configs.Test.Win64]
+ConfigSelections = {CollagenTest = {Config = "Debug"}}
