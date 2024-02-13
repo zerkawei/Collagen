@@ -18,7 +18,12 @@ void pluginApply(void* self, void* thing)
     thingIface->setValue(thing, thingIface->getValue(thing) + 1);
 }
 
-IPlugin cplug = (IPlugin){.getName = &pluginGetName, .getVersion = &pluginGetVersion, .apply = &pluginApply };
+int pluginApplyInt(void* self, int i)
+{
+    return i + 1;
+}
+
+IPlugin cplug = (IPlugin){.getName = &pluginGetName, .getVersion = &pluginGetVersion, .apply = &pluginApply, .applyInt = &pluginApplyInt };
 
 EXPORT bool plug_entry (HostInfo info, void** pluginPtr)
 {

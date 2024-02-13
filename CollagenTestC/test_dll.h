@@ -23,6 +23,7 @@ typedef struct PluginInterface
     StringView(*getName)(void*);
     StringView(*getVersion)(void*);
     void(*apply)(void*, void*);
+    int(*applyInt)(void*, int);
 } IPlugin;
 
 struct _Plugin

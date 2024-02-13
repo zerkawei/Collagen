@@ -1,9 +1,17 @@
 using System;
 using System.Collections;
+using System.Reflection;
 namespace Collagen;
 
-[AttributeUsage(.Interface, .ReflectAttribute)]
+[AttributeUsage(.Interface)]
 public struct AllowForeignImplementationAttribute : Attribute {}
+
+[AttributeUsage(.Method)]
+public struct CollagenNameAttribute : Attribute
+{
+	public StringView Name;
+	public this(StringView name) {Name = name;}
+}
 
 [CRepr] public struct CReprStringView : StringView { public this(StringView _) : base(_) {} public static implicit operator CReprStringView(StringView _) => .(_); }
 
@@ -72,6 +80,14 @@ public static class Collagen
 			string.Append(scope $"({typeStr})System.Internal.UnsafeCastToObject(");
 			defer:mixin string.Append(")");
 		}
+	}
+
+	[Comptime]
+	public static void MangleName(MethodInfo m, String string)
+	{
+		String args = scope .();
+		for(int i < m.ParamCount) args.Append(m.GetParamType(i).GetFullName(.. scope .()));
+		string.Append(scope String(m.Name), "¨",  args.GetHashCode().ToString(.. scope .(), "X", null));
 	}
 }
 

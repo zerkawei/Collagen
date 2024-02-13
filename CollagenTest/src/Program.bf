@@ -5,10 +5,11 @@ namespace CollagenTest;
 [AllowForeignImplementation]
 public interface IPlugin
 {
-	public StringView Name    { get; }
-	public StringView Version { get; }
+	public StringView Name    { [CollagenName("getName")]get; }
+	public StringView Version { [CollagenName("getVersion")]get; }
 
 	public void Apply(Thing t);
+	public int  Apply(int i);
 }
 
 public class Thing

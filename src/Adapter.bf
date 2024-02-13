@@ -18,14 +18,25 @@ public class CollagenAdapter<T> where T : interface
 		for(let m in typeof(T).GetMethods())
 		{
 			if(m.Name.IsEmpty) continue;
-			Compiler.EmitTypeBody(type, scope $"{MethodAdapt(m, ..scope .())};\n");
+
+			String name = scope .();
+			if(m.GetCustomAttribute<CollagenNameAttribute>() case .Ok(let val))
+			{
+				name.Append(val.Name);
+			}
+			else
+			{
+				Collagen.MangleName(m, name);
+			}
+
+			Compiler.EmitTypeBody(type, scope $"{MethodAdapt(m, ..scope .(), name)};\n");
 		}
 	}
 
 	[Comptime]
-	public static void MethodAdapt(MethodInfo m, String string)
+	public static void MethodAdapt(MethodInfo m, String string, String name)
 	{
-		let strs = scope MethodAdapter<T>(m.Name);
+		let strs = scope MethodAdapter<T>(name);
 
 		for(int i < m.ParamCount) strs.Box(m.GetParamType(i), m.GetParamName(i));
 		strs.Adapt(m.ReturnType, m.Name, true);
