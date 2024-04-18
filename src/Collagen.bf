@@ -1,3 +1,10 @@
+namespace System
+{
+	using Collagen;
+	[APICast(typeof(CReprStringView))] public extension StringView {}
+	[APICast(typeof(CReprVariant))]    public extension Variant    {}
+}
+
 using System;
 using System.Collections;
 using System.Reflection;
@@ -13,7 +20,24 @@ public struct CollagenNameAttribute : Attribute
 	public this(StringView name) {Name = name;}
 }
 
+[AttributeUsage(.Struct)]
+public struct APICastAttribute : Attribute
+{
+	public Type Target;
+	public this(Type target) {Target = target;}
+}
+
 [CRepr] public struct CReprStringView : StringView { public this(StringView _) : base(_) {} public static implicit operator CReprStringView(StringView _) => .(_); }
+[CRepr] public struct CReprVariant : Variant
+{
+	public this(Variant v)
+	{
+		this.[Friend]mData       = v.[Friend]mData;
+		this.[Friend]mStructType = v.[Friend]mStructType;
+	}
+
+	public static implicit operator CReprVariant(Variant _) => .(_);
+}
 
 public static class Collagen
 {
@@ -27,16 +51,23 @@ public static class Collagen
 		return null;
 	}
 
+	public static void Export   (StringView name, void* iface) => ExportedInterfaces.Add(name, iface);
+	public static void Export<T>(StringView	name)              => ExportedInterfaces.Add(name, CollagenInterface<T>.Default);
+
 	[Comptime]
 	public static void TypeFor(Type type, String string)
 	{
-		if(type.IsPrimitive || type.IsStruct)
+		if(type.GetCustomAttribute<APICastAttribute>() case .Ok(let att))
 		{
-			type.GetFullName(string);
+			att.Target.GetFullName(string);
 		}
 		else if(type.IsEnum)
 		{
 			type.UnderlyingType.GetFullName(string);
+		}
+		else if(type.IsValueType)
+		{
+			type.GetFullName(string);
 		}
 		else
 		{
@@ -48,17 +79,13 @@ public static class Collagen
 	public static mixin Box(Type type, String string)
 	{
 		let typeStr = Collagen.TypeFor(type, .. scope:: .());
-		if(type.IsEnum)
+		if(type.IsValueType)
 		{
-			string.Append(scope $"({typeStr})");
+			string.Append("(.)");
 		}
-		else if(type == typeof(StringView))
+		else
 		{
-			string.Append("(CReprStringView)");
-		}
-		else if(!type.IsPrimitive)
-		{
-			string.Append("System.Internal.UnsafeCastToPtr(");
+			string.Append(scope $"({typeStr})System.Internal.UnsafeCastToPtr(");
 			defer:mixin string.Append(")");
 		}
 	}
@@ -67,15 +94,11 @@ public static class Collagen
 	public static mixin Adapt(Type type, String string)
 	{
 		let typeStr = type.GetFullName(.. scope:: .());
-		if(type.IsEnum)
+		if(type.IsValueType)
 		{
-			string.Append(scope $"({typeStr})");
+			string.Append("(.)");
 		}
-		else if(type == typeof(StringView))
-		{
-			string.Append("(StringView)");
-		}
-		else if(!type.IsPrimitive)
+		else
 		{
 			string.Append(scope $"({typeStr})System.Internal.UnsafeCastToObject(");
 			defer:mixin string.Append(")");

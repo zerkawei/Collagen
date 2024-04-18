@@ -1,5 +1,6 @@
 using Collagen;
 using System;
+using System.IO;
 namespace CollagenTest;
 
 [AllowForeignImplementation]
@@ -30,8 +31,8 @@ public class Program
 {
 	public static void Main()
 	{
-		Collagen.ExportedInterfaces.Add("Thing", CollagenInterface<Thing>.Default);
-		Collagen.ExportedInterfaces.Add("IPlugin", CollagenInterface<IPlugin>.Default);
+		Collagen.Export<Thing>("Thing");
+		Collagen.Export<IPlugin>("IPlugin");
 
 		let thing = scope Thing();
 		thing.Value = 1;
@@ -41,13 +42,14 @@ public class Program
 			plugin.Apply(thing);
 			Console.WriteLine(thing.Value);
 		}
+		Console.Read();
 	}
 
 	public static Result<IPlugin> LoadPlugin(StringView path)
 	{
-		let plug = Internal.LoadSharedLibrary(path.Ptr);
+		let plug = Windows.LoadLibraryA(Path.GetAbsolutePath(path, Directory.GetCurrentDirectory(.. scope .()) ,.. scope .()).Ptr);
 		if(plug == null) return .Err;
-		PluginEntry entry = (.)Internal.GetSharedProcAddress(plug, "plug_entry");
+		PluginEntry entry = (.)Windows.GetProcAddress(plug, "plug_entry");
 		if(entry == null) return .Err;
 		void** outPtr = scope .();
 		if(!entry(.(=> Collagen.GetInterface), outPtr)) return .Err;
