@@ -28,17 +28,10 @@ public struct CollagenInterface<T>
 
 		for(let m in methods)
 		{
-			if(m.Name.IsEmpty || m.IsConstructor || m.IsDestructor || !m.IsPublic || m.DeclaringType == typeof(Object)) continue;
-
+			if(m.Name.IsEmpty || m.IsConstructor || m.IsDestructor || !m.IsPublic || m.DeclaringType == typeof(Object) || m.DeclaringType == typeof(ValueType) || m.IsStatic || m.GenericArgCount > 0) continue;
+			
 			String name = scope .();
-			if(m.GetCustomAttribute<CollagenNameAttribute>() case .Ok(let val))
-			{
-				name.Append(val.Name);
-			}
-			else
-			{
-				Collagen.MangleName(m, name);
-			}
+			CollagenMethods.GetCollagenName(m, name);
 
 			ctor.Append(scope $"{name} = => def__{name}; ");
 			body.Append(scope $"public function {Collagen.TypeFor(m.ReturnType, ..scope .())}(void*");
@@ -46,23 +39,12 @@ public struct CollagenInterface<T>
 			{
 				body.Append(scope $", {Collagen.TypeFor(m.GetParamType(i), ..scope .())}");
 			}
-			body.Append(scope $") {name};\n{DefaultMethod(m, ..scope .(), name)};\n");
+			body.Append(scope $") {name};\n{CollagenMethods.DefaultInterface(m, .. scope .())};\n");
 		}
 
 		ctor.Append("};\n");
 
 		Compiler.EmitTypeBody(type, ctor);
 		Compiler.EmitTypeBody(type, body);
-	}
-
-	[Comptime]
-	private static void DefaultMethod(MethodInfo m, String string, String name)
-	{
-		let strs = scope MethodAdapter<T>(m.Name);
-
-		for(int i < m.ParamCount) strs.Adapt(m.GetParamType(i), m.GetParamName(i));
-		strs.Box(m.ReturnType, scope $"def__{name}", true);
-
-		string.Append(strs);
 	}
 }

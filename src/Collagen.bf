@@ -41,7 +41,7 @@ public struct APICastAttribute : Attribute
 
 public static class Collagen
 {
-	public static Dictionary<StringView, void*> ExportedInterfaces = new .() ~ delete _;
+	private static Dictionary<StringView, void*> ExportedInterfaces = new .() ~ delete _;
 	public static void* GetInterface(char8* symbol)
 	{
 		if(ExportedInterfaces.TryGet(.(symbol), let _, let iface))
@@ -53,64 +53,38 @@ public static class Collagen
 
 	public static void Export   (StringView name, void* iface) => ExportedInterfaces.Add(name, iface);
 	public static void Export<T>(StringView	name)              => ExportedInterfaces.Add(name, CollagenInterface<T>.Default);
+	[Inline]
+	public static void Export<T>()                             => Export<T>(TypeName<T>());
+
+	[Comptime(ConstEval=true)]
+	private static var TypeName<T>() => typeof(T).GetFullName(.. scope .());
 
 	[Comptime]
-	public static void TypeFor(Type type, String string)
+	internal static void TypeFor(Type type, String string)
 	{
 		if(type.GetCustomAttribute<APICastAttribute>() case .Ok(let att))
 		{
 			att.Target.GetFullName(string);
 		}
-		else if(type.IsEnum)
-		{
-			type.UnderlyingType.GetFullName(string);
-		}
-		else if(type.IsValueType)
+		else if(type.IsValueType && !type.IsEnum)
 		{
 			type.GetFullName(string);
+		}
+		else if(type.IsEnum)
+		{
+			if(type.IsUnion)
+			{
+				type.GetFullName(string);
+			}
+			else
+			{
+				type.UnderlyingType.GetFullName(string);
+			}
 		}
 		else
 		{
 			string.Append("void*");
 		}
-	}
-
-	[Comptime]
-	public static mixin Box(Type type, String string)
-	{
-		let typeStr = Collagen.TypeFor(type, .. scope:: .());
-		if(type.IsValueType)
-		{
-			string.Append("(.)");
-		}
-		else
-		{
-			string.Append(scope $"({typeStr})System.Internal.UnsafeCastToPtr(");
-			defer:mixin string.Append(")");
-		}
-	}
-
-	[Comptime]
-	public static mixin Adapt(Type type, String string)
-	{
-		let typeStr = type.GetFullName(.. scope:: .());
-		if(type.IsValueType)
-		{
-			string.Append("(.)");
-		}
-		else
-		{
-			string.Append(scope $"({typeStr})System.Internal.UnsafeCastToObject(");
-			defer:mixin string.Append(")");
-		}
-	}
-
-	[Comptime]
-	public static void MangleName(MethodInfo m, String string)
-	{
-		String args = scope .();
-		for(int i < m.ParamCount) args.Append(m.GetParamType(i).GetFullName(.. scope .()));
-		string.Append(scope String(m.Name), "¨",  args.GetHashCode().ToString(.. scope .(), "X", null));
 	}
 }
 
