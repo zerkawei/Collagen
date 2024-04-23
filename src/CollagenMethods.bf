@@ -66,10 +66,18 @@ internal static class CollagenMethods
 			accessor = method.Name; 
 		}
 
-		str.Append(scope $"public static {Collagen.TypeFor(method.ReturnType, .. scope .())} def__{GetCollagenName(method, .. scope .())}(void* __self");
+		str.Append(scope $"public static {Collagen.TypeFor(method.ReturnType, .. scope .())} def__{GetCollagenName(method, .. scope .())}(");
+		if(!method.IsStatic)
+		{
+			str.Append("void* __self");
+		}
 		for(int i < method.ParamCount)
 		{
-			str.Append(scope $", {Collagen.TypeFor(method.GetParamType(i), .. scope .())} {method.GetParamName(i)}");
+			if(i > 0 || !method.IsStatic)
+			{
+				str.Append(", ");
+			}
+			str.Append(scope $"{Collagen.TypeFor(method.GetParamType(i), .. scope .())} {method.GetParamName(i)}");
 		}
 		str.Append(")\n{\n");
 
@@ -78,7 +86,11 @@ internal static class CollagenMethods
 			str.Append("let __callret = ");
 		}
 
-		if(method.DeclaringType.IsValueType)
+		if(method.IsStatic)
+		{
+			method.DeclaringType.GetFullName(str);
+		}
+		else if(method.DeclaringType.IsValueType)
 		{
 			str.Append(scope $"(*(({method.DeclaringType.GetFullName(.. scope .())}*)__self))");
 		}

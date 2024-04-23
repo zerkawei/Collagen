@@ -28,16 +28,25 @@ public struct CollagenInterface<T>
 
 		for(let m in methods)
 		{
-			if(m.Name.IsEmpty || m.IsConstructor || m.IsDestructor || !m.IsPublic || m.DeclaringType == typeof(Object) || m.DeclaringType == typeof(ValueType) || m.IsStatic || m.GenericArgCount > 0) continue;
+			if(m.Name.IsEmpty || m.IsConstructor || m.IsDestructor || !m.IsPublic || m.IsStatic || m.DeclaringType == typeof(Object) || m.DeclaringType == typeof(ValueType) || m.GenericArgCount > 0) continue;
 			
 			String name = scope .();
 			CollagenMethods.GetCollagenName(m, name);
 
 			ctor.Append(scope $"{name} = => def__{name}; ");
-			body.Append(scope $"public function {Collagen.TypeFor(m.ReturnType, ..scope .())}(void*");
+			body.Append(scope $"public function {Collagen.TypeFor(m.ReturnType, ..scope .())}(");
+			if(!m.IsStatic)
+			{
+				body.Append("void*");
+			}
 			for(int i < m.ParamCount)
 			{
-				body.Append(scope $", {Collagen.TypeFor(m.GetParamType(i), ..scope .())}");
+				if(i > 0 || !m.IsStatic)
+				{
+					body.Append(", ");
+				}
+				body.Append(scope $"{Collagen.TypeFor(m.GetParamType(i), ..scope .())}");
+
 			}
 			body.Append(scope $") {name};\n{CollagenMethods.DefaultInterface(m, .. scope .())};\n");
 		}
