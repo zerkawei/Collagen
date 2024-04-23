@@ -1,10 +1,3 @@
-namespace System
-{
-	using Collagen;
-	[APICast(typeof(CReprStringView))] public extension StringView {}
-	[APICast(typeof(CReprVariant))]    public extension Variant    {}
-}
-
 using System;
 using System.Collections;
 using System.Reflection;
@@ -27,16 +20,35 @@ public struct APICastAttribute : Attribute
 	public this(Type target) {Target = target;}
 }
 
-[CRepr] public struct CReprStringView : StringView { public this(StringView _) : base(_) {} public static implicit operator CReprStringView(StringView _) => .(_); }
-[CRepr] public struct CReprVariant : Variant
+[CRepr]
+public struct CRepr<T> where T : struct, new
 {
-	public this(Variant v)
+	[Comptime, OnCompile(.TypeInit)]
+	public static void Generate()
 	{
-		this.[Friend]mData       = v.[Friend]mData;
-		this.[Friend]mStructType = v.[Friend]mStructType;
-	}
+		let self   = typeof(Self);
+		let target = typeof(T);
+		for(let f in target.GetFields())
+		{
+			Compiler.EmitTypeBody(self, scope $"{f.FieldType.GetFullName(.. scope .())} {f.Name};\n");
+		}
 
-	public static implicit operator CReprVariant(Variant _) => .(_);
+		Compiler.EmitTypeBody(self, scope $"this({target.GetFullName(.. scope .())} val)\n\{\n");
+		for(let f in target.GetFields())
+		{
+			Compiler.EmitTypeBody(self, scope $"this.{f.Name} = val.[Friend]{f.Name};\n");
+		}
+		Compiler.EmitTypeBody(self, "}\n");
+
+		Compiler.EmitTypeBody(self, scope $"public static implicit operator Self({target.GetFullName(.. scope .())} _) => .(_);\n");
+
+		Compiler.EmitTypeBody(self, scope $"public static implicit operator {target.GetFullName(.. scope .())}(Self _) \n\{\n{target.GetFullName(.. scope .())} val = .();\n");
+		for(let f in target.GetFields())
+		{
+			Compiler.EmitTypeBody(self, scope $"val.[Friend]{f.Name} = _.{f.Name};\n");
+		}
+		Compiler.EmitTypeBody(self,"return val;\n}");
+	}
 }
 
 public static class Collagen
@@ -66,20 +78,17 @@ public static class Collagen
 		{
 			att.Target.GetFullName(string);
 		}
-		else if(type.IsValueType && !type.IsEnum)
+		else if(type.IsStruct && type.GetCustomAttribute<CReprAttribute>() case .Err)
+		{
+			string.Append(scope $"CRepr<{type.GetFullName(.. scope .())}>");
+		}
+		else if(type.IsValueType || (type.IsEnum && type.IsUnion))
 		{
 			type.GetFullName(string);
 		}
 		else if(type.IsEnum)
 		{
-			if(type.IsUnion)
-			{
-				type.GetFullName(string);
-			}
-			else
-			{
-				type.UnderlyingType.GetFullName(string);
-			}
+			type.UnderlyingType.GetFullName(string);
 		}
 		else
 		{
