@@ -3,7 +3,7 @@ using System;
 using System.IO;
 namespace CollagenTest;
 
-[AllowForeignImplementation]
+[AllowForeignImplementation, CollagenName("IPlugin")]
 public interface IPlugin
 {
 	public StringView Name    { [CollagenName("getName")]get; }
@@ -13,6 +13,7 @@ public interface IPlugin
 	public int  Apply(int i);
 }
 
+[CollagenName("Thing")]
 public class Thing
 {
 	public int Value { get; set; }
@@ -31,8 +32,8 @@ public class Program
 {
 	public static void Main()
 	{
-		Collagen.Export<Thing>("Thing");
-		Collagen.Export<IPlugin>("IPlugin");
+		Collagen.Export<Thing>();
+		Collagen.Export<IPlugin>();
 
 		let thing = scope Thing();
 		thing.Value = 1;

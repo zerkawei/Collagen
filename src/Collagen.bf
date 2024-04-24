@@ -6,7 +6,7 @@ namespace Collagen;
 [AttributeUsage(.Interface)]
 public struct AllowForeignImplementationAttribute : Attribute {}
 
-[AttributeUsage(.Method)]
+[AttributeUsage(.Method | .Types)]
 public struct CollagenNameAttribute : Attribute
 {
 	public StringView Name;
@@ -63,13 +63,12 @@ public static class Collagen
 		return null;
 	}
 
-	public static void Export   (StringView name, void* iface) => ExportedInterfaces.Add(name, iface);
-	public static void Export<T>(StringView	name)              => ExportedInterfaces.Add(name, CollagenInterface<T>.Default);
 	[Inline]
-	public static void Export<T>()                             => Export<T>(TypeName<T>());
+	public static void Export<T>() => Export(TypeName<T>(), CollagenInterface<T>.Default);
+	public static void Export (StringView name, void* iface) => ExportedInterfaces.Add(name, iface);
 
 	[Comptime(ConstEval=true)]
-	private static var TypeName<T>() => typeof(T).GetFullName(.. scope .());
+	private static var TypeName<T>() => typeof(T).GetCustomAttribute<CollagenNameAttribute>() case .Ok(let att) ? att.Name : typeof(T).GetFullName(.. scope .());
 
 	[Comptime]
 	internal static void TypeFor(Type type, String string)
