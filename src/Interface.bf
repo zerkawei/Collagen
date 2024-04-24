@@ -28,7 +28,7 @@ public struct CollagenInterface<T>
 
 		for(let m in methods)
 		{
-			if(m.Name.IsEmpty || m.IsConstructor || m.IsDestructor || !m.IsPublic || m.IsStatic || m.DeclaringType == typeof(Object) || m.DeclaringType == typeof(ValueType) || m.GenericArgCount > 0) continue;
+			if(m.Name.IsEmpty || m.IsConstructor || m.IsDestructor || !m.IsPublic || m.DeclaringType == typeof(Object) || m.DeclaringType == typeof(ValueType) || m.GenericArgCount > 0) continue;
 			
 			String name = scope .();
 			CollagenMethods.GetCollagenName(m, name);

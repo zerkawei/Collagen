@@ -88,7 +88,7 @@ internal static class CollagenMethods
 
 		if(method.IsStatic)
 		{
-			method.DeclaringType.GetFullName(str);
+			str.Append("T");
 		}
 		else if(method.DeclaringType.IsValueType)
 		{

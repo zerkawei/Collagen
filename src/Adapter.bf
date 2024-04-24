@@ -17,7 +17,7 @@ public class CollagenAdapter<T> where T : interface
 
 		for(let m in typeof(T).GetMethods())
 		{
-			if(m.Name.IsEmpty) continue;
+			if(m.Name.IsEmpty || m.IsStatic) continue;
 			Compiler.EmitTypeBody(type, scope $"{CollagenMethods.Adapt(m, .. scope .())};\n");
 		}
 	}
