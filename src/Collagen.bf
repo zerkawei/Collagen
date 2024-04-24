@@ -68,7 +68,7 @@ public static class Collagen
 	public static void Export (StringView name, void* iface) => ExportedInterfaces.Add(name, iface);
 
 	[Comptime(ConstEval=true)]
-	private static var TypeName<T>() => typeof(T).GetCustomAttribute<CollagenNameAttribute>() case .Ok(let att) ? att.Name : typeof(T).GetFullName(.. scope .());
+	private static String TypeName<T>() => typeof(T).GetCustomAttribute<CollagenNameAttribute>() case .Ok(let att) ? scope .(att.Name) : typeof(T).GetFullName(.. scope .());
 
 	[Comptime]
 	internal static void TypeFor(Type type, String string)
