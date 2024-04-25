@@ -37,6 +37,22 @@ internal static class CollagenMethods
 		{
 			string.Append("(.)");
 		}
+		else if(type is RefType)
+		{
+			let refType = type as RefType;
+			switch(refType.RefKind)
+			{
+			case .In:
+				string.Append("in ");
+			case .Out:
+				string.Append("out ");
+			case .Ref:
+				string.Append("ref ");
+			case .Mut:
+				string.Append("mut ");
+			}
+			string.Append(scope $"*({refType.UnderlyingType.GetFullName(.. scope .())}*)");
+		}
 		else
 		{
 			string.Append(scope $"({typeStr})System.Internal.UnsafeCastToObject(");
