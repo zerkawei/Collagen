@@ -21,7 +21,7 @@ public struct APICastAttribute : Attribute
 }
 
 [CRepr]
-public struct CRepr<T> where T : struct, new
+public struct CRepr<T> where T : struct
 {
 	[Comptime, OnCompile(.TypeInit)]
 	public static void Generate()
@@ -42,7 +42,7 @@ public struct CRepr<T> where T : struct, new
 
 		Compiler.EmitTypeBody(self, scope $"public static implicit operator Self({target.GetFullName(.. scope .())} _) => .(_);\n");
 
-		Compiler.EmitTypeBody(self, scope $"public static implicit operator {target.GetFullName(.. scope .())}(Self _) \n\{\n{target.GetFullName(.. scope .())} val = .();\n");
+		Compiler.EmitTypeBody(self, scope $"public static implicit operator {target.GetFullName(.. scope .())}(Self _) \n\{\n{target.GetFullName(.. scope .())} val = ?;\n");
 		for(let f in target.GetFields())
 		{
 			Compiler.EmitTypeBody(self, scope $"val.[Friend]{f.Name} = _.{f.Name};\n");
