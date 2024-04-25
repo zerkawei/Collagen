@@ -89,6 +89,11 @@ public static class Collagen
 		{
 			type.UnderlyingType.GetFullName(string);
 		}
+		else if(type is RefType)
+		{
+			type.UnderlyingType.GetFullName(string);
+			string.Append("*");
+		}
 		else
 		{
 			string.Append("void*");

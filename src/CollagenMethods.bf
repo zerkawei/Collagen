@@ -22,6 +22,10 @@ internal static class CollagenMethods
 		{
 			string.Append("(.)");
 		}
+		else if(type is RefType)
+		{
+			string.Append(scope $"(.)&");
+		}
 		else
 		{
 			string.Append(scope $"({typeStr})System.Internal.UnsafeCastToPtr(");
@@ -170,6 +174,14 @@ internal static class CollagenMethods
 	public static void Adapt(MethodInfo method, String str)
 	{
 		str.Append(scope $"public {method.ReturnType.GetFullName(.. scope .())} {method.Name}({method.GetParamsDecl(.. scope .())})\n\{\n");
+
+		for(int i = 0; i < method.ParamCount; i++)
+		{
+			if(method.GetParamType(i) is RefType && (method.GetParamType(i) as RefType).RefKind == .Out)
+			{
+				str.Append(scope $"{method.GetParamName(i)} = ?;\n"); 
+			}
+		}
 
 		if(method.ReturnType != typeof(void))
 		{
