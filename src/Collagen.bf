@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using internal Collagen;
 namespace Collagen;
 
 [AttributeUsage(.Interface)]
@@ -30,13 +31,13 @@ public struct CRepr<T> where T : struct
 		let target = typeof(T);
 		for(let f in target.GetFields())
 		{
-			Compiler.EmitTypeBody(self, scope $"{f.FieldType.GetFullName(.. scope .())} {f.Name};\n");
+			Compiler.EmitTypeBody(self, scope $"{f.FieldType.GetFullName(.. scope .())} {Collagen.FieldName(f, .. scope .())};\n");
 		}
 
 		Compiler.EmitTypeBody(self, scope $"this({target.GetFullName(.. scope .())} val)\n\{\n");
 		for(let f in target.GetFields())
 		{
-			Compiler.EmitTypeBody(self, scope $"this.{f.Name} = val.[Friend]{f.Name};\n");
+			Compiler.EmitTypeBody(self, scope $"this.{Collagen.FieldName(f, .. scope .())} = val.{Collagen.FieldAccess(f, .. scope .())};\n");
 		}
 		Compiler.EmitTypeBody(self, "}\n");
 
@@ -45,7 +46,7 @@ public struct CRepr<T> where T : struct
 		Compiler.EmitTypeBody(self, scope $"public static implicit operator {target.GetFullName(.. scope .())}(Self _) \n\{\n{target.GetFullName(.. scope .())} val = ?;\n");
 		for(let f in target.GetFields())
 		{
-			Compiler.EmitTypeBody(self, scope $"val.[Friend]{f.Name} = _.{f.Name};\n");
+			Compiler.EmitTypeBody(self, scope $"val.{Collagen.FieldAccess(f, .. scope .())} = _.{Collagen.FieldName(f, .. scope .())};\n");
 		}
 		Compiler.EmitTypeBody(self,"return val;\n}");
 	}
@@ -69,6 +70,20 @@ public static class Collagen
 
 	[Comptime(ConstEval=true)]
 	private static String TypeName<T>() => typeof(T).GetCustomAttribute<CollagenNameAttribute>() case .Ok(let att) ? scope .(att.Name) : typeof(T).GetFullName(.. scope .());
+
+	[Comptime]
+	internal static void FieldName(FieldInfo f, String string)
+	{
+		if(f.Name[0].IsDigit) string.Append("_");
+		string.Append(f.Name);
+	}
+
+	[Comptime]
+	internal static void FieldAccess(FieldInfo f, String string)
+	{
+		if(!f.IsPublic) string.Append("[Friend]");
+ 		string.Append(f.Name);
+	}
 
 	[Comptime]
 	internal static void TypeFor(Type type, String string)
