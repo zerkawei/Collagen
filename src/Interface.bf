@@ -28,8 +28,8 @@ public struct CollagenInterface<T>
 
 		for(let m in methods)
 		{
-			if(m.Name.IsEmpty || m.IsConstructor || m.IsDestructor || !m.IsPublic || m.DeclaringType == typeof(Object) || m.DeclaringType == typeof(ValueType) || m.GenericArgCount > 0) continue;
-			
+			if(m.Name.IsEmpty || m.IsConstructor || m.IsDestructor || !m.IsPublic || m.DeclaringType != typeof(T) || m.GenericArgCount > 0 || m.IsMixin) continue;
+
 			String name = scope .();
 			CollagenMethods.GetCollagenName(m, name);
 
