@@ -106,10 +106,12 @@ public static class Collagen
 		{
 			att.Target.GetFullName(string);
 		}
+		/*
 		else if(type.IsStruct && !type.IsUnion && type.GetCustomAttribute<CReprAttribute>() case .Err)
 		{
 			string.Append(scope $"CRepr<{type.GetFullName(.. scope .())}>");
 		}
+		*/
 		else if(type.IsValueType || (type.IsEnum && type.IsUnion))
 		{
 			type.GetFullName(string);
