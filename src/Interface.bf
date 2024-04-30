@@ -28,14 +28,15 @@ public struct CollagenInterface<T>
 
 		for(let m in methods)
 		{
-			if(m.Name.IsEmpty || m.IsConstructor || m.IsDestructor || !m.IsPublic || m.DeclaringType != typeof(T) || m.GenericArgCount > 0 || m.IsMixin) continue;
+			if(m.Name.IsEmpty || (m.IsConstructor && !m.DeclaringType.IsValueType) || m.IsDestructor || !m.IsPublic || m.DeclaringType != typeof(T) || m.GenericArgCount > 0 || m.IsMixin) continue;
 
 			String name = scope .();
 			CollagenMethods.GetCollagenName(m, name);
 
 			ctor.Append(scope $"{name} = => def__{name}; ");
-			body.Append(scope $"public function {Collagen.TypeFor(m.ReturnType, ..scope .())}(");
-			if(!m.IsStatic)
+			body.Append(scope $"public function {m.IsConstructor ? m.DeclaringType.GetFullName(.. scope . ()) : Collagen.TypeFor(m.ReturnType, ..scope .())}(");
+
+			if(!m.IsStatic && !m.IsConstructor)
 			{
 				if(m.DeclaringType.IsValueType)
 				{
@@ -49,7 +50,7 @@ public struct CollagenInterface<T>
 			}
 			for(int i < m.ParamCount)
 			{
-				if(i > 0 || !m.IsStatic)
+				if(i > 0 || (!m.IsStatic && !m.IsConstructor))
 				{
 					body.Append(", ");
 				}

@@ -80,14 +80,19 @@ internal static class CollagenMethods
 			type     = (method.Name.Length == 5) ? .IndexerGet : .PropertyGet;
 			accessor = method.Name.Substring(5);
 		}
+		else if(method.IsConstructor)
+		{
+			type     = .Method;
+			accessor = method.DeclaringType.GetFullName(.. new .());
+		}
 		else
 		{
 			type     = .Method;
 			accessor = method.Name; 
 		}
 
-		str.Append(scope $"public static {Collagen.TypeFor(method.ReturnType, .. scope .())} def__{GetCollagenName(method, .. scope .())}(");
-		if(!method.IsStatic)
+		str.Append(scope $"public static {method.IsConstructor ? method.DeclaringType.GetFullName(.. scope .()) : Collagen.TypeFor(method.ReturnType, .. scope .())} def__{GetCollagenName(method, .. scope .())}(");
+		if(!method.IsStatic && !method.IsConstructor)
 		{
 			if(method.DeclaringType.IsValueType)
 			{
@@ -101,7 +106,7 @@ internal static class CollagenMethods
 		}
 		for(int i < method.ParamCount)
 		{
-			if(i > 0 || !method.IsStatic)
+			if(i > 0 || (!method.IsStatic && !method.IsConstructor))
 			{
 				str.Append(", ");
 			}
@@ -109,7 +114,7 @@ internal static class CollagenMethods
 		}
 		str.Append(")\n{\n");
 
-		if(method.ReturnType != typeof(void))
+		if(method.ReturnType != typeof(void) || method.IsConstructor)
 		{
 			str.Append("let __callret = ");
 		}
@@ -118,16 +123,19 @@ internal static class CollagenMethods
 		{
 			str.Append("T");
 		}
-		else if(method.DeclaringType.IsValueType)
+		else if(method.DeclaringType.IsValueType && !method.IsConstructor)
 		{
 			str.Append(scope $"(*__self)");
 		}
-		else
+		else if(!method.IsConstructor)
 		{
 			str.Append(scope $"(({method.DeclaringType.GetFullName(.. scope .())})System.Internal.UnsafeCastToObject(__self))");
 		}
 
-		str.Append((type <= .PropertyGet) ? "." : "[");
+		if(!method.IsConstructor)
+		{
+			str.Append((type <= .PropertyGet) ? "." : "[");
+		}
 		str.Append(accessor);
 
 		if(type == .Method)
@@ -173,6 +181,11 @@ internal static class CollagenMethods
 				str.Append("__callret");
 			}
 			str.Append(";");
+		}
+
+		if(method.IsConstructor)
+		{
+			str.Append("\nreturn __callret;");
 		}
 
 		str.Append("\n}");
