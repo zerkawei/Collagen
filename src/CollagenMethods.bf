@@ -89,7 +89,15 @@ internal static class CollagenMethods
 		str.Append(scope $"public static {Collagen.TypeFor(method.ReturnType, .. scope .())} def__{GetCollagenName(method, .. scope .())}(");
 		if(!method.IsStatic)
 		{
-			str.Append("void* __self");
+			if(method.DeclaringType.IsValueType)
+			{
+				str.Append(method.DeclaringType.GetFullName(.. scope .()));
+			}
+			else
+			{
+				str.Append("void");
+			}
+			str.Append("* __self");
 		}
 		for(int i < method.ParamCount)
 		{
@@ -112,7 +120,7 @@ internal static class CollagenMethods
 		}
 		else if(method.DeclaringType.IsValueType)
 		{
-			str.Append(scope $"(*(({method.DeclaringType.GetFullName(.. scope .())}*)__self))");
+			str.Append(scope $"(*__self)");
 		}
 		else
 		{

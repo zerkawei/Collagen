@@ -37,7 +37,15 @@ public struct CollagenInterface<T>
 			body.Append(scope $"public function {Collagen.TypeFor(m.ReturnType, ..scope .())}(");
 			if(!m.IsStatic)
 			{
-				body.Append("void*");
+				if(m.DeclaringType.IsValueType)
+				{
+					body.Append(m.DeclaringType.GetFullName(.. scope .()));
+				}
+				else
+				{
+					body.Append("void");
+				}
+				body.Append("*");
 			}
 			for(int i < m.ParamCount)
 			{
