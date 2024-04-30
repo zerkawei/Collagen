@@ -31,13 +31,20 @@ public struct CRepr<T> where T : struct
 		let target = typeof(T);
 		for(let f in target.GetFields())
 		{
-			Compiler.EmitTypeBody(self, scope $"{f.FieldType.GetFullName(.. scope .())} {Collagen.FieldName(f, .. scope .())};\n");
+			Compiler.EmitTypeBody(self, scope $"{Collagen.TypeFor(f.FieldType, .. scope .())} {Collagen.FieldName(f, .. scope .())};\n");
 		}
 
 		Compiler.EmitTypeBody(self, scope $"this({target.GetFullName(.. scope .())} val)\n\{\n");
 		for(let f in target.GetFields())
 		{
-			Compiler.EmitTypeBody(self, scope $"this.{Collagen.FieldName(f, .. scope .())} = val.{Collagen.FieldAccess(f, .. scope .())};\n");
+			Compiler.EmitTypeBody(self, scope $"this.{Collagen.FieldName(f, .. scope .())} = ");
+			String access = scope .();
+			{
+				CollagenMethods.[Friend]Box!(f.FieldType, access);
+				access.Append(scope $"val.{Collagen.FieldAccess(f, .. scope .())}");
+			}
+			access.Append(";\n");
+			Compiler.EmitTypeBody(self, access);
 		}
 		Compiler.EmitTypeBody(self, "}\n");
 
@@ -46,7 +53,14 @@ public struct CRepr<T> where T : struct
 		Compiler.EmitTypeBody(self, scope $"public static implicit operator {target.GetFullName(.. scope .())}(Self _) \n\{\n{target.GetFullName(.. scope .())} val = ?;\n");
 		for(let f in target.GetFields())
 		{
-			Compiler.EmitTypeBody(self, scope $"val.{Collagen.FieldAccess(f, .. scope .())} = _.{Collagen.FieldName(f, .. scope .())};\n");
+			Compiler.EmitTypeBody(self, scope $"val.{Collagen.FieldAccess(f, .. scope .())} = ");
+			String access = scope .();
+			{
+				CollagenMethods.[Friend]Adapt!(f.FieldType, access);
+				access.Append(scope $"_.{Collagen.FieldName(f, .. scope .())}");
+			}
+			access.Append(";\n");
+			Compiler.EmitTypeBody(self, access);
 		}
 		Compiler.EmitTypeBody(self,"return val;\n}");
 	}
@@ -92,7 +106,7 @@ public static class Collagen
 		{
 			att.Target.GetFullName(string);
 		}
-		else if(type.IsStruct && type.GetCustomAttribute<CReprAttribute>() case .Err)
+		else if(type.IsStruct && !type.IsUnion && type.GetCustomAttribute<CReprAttribute>() case .Err)
 		{
 			string.Append(scope $"CRepr<{type.GetFullName(.. scope .())}>");
 		}
@@ -104,7 +118,7 @@ public static class Collagen
 		{
 			type.UnderlyingType.GetFullName(string);
 		}
-		else if(type is RefType)
+		else if(type is RefType || type.IsPointer && type.UnderlyingType.IsPrimitive)
 		{
 			type.UnderlyingType.GetFullName(string);
 			string.Append("*");

@@ -18,7 +18,7 @@ internal static class CollagenMethods
 	private static mixin Box(Type type, String string)
 	{
 		let typeStr = Collagen.TypeFor(type, .. scope:: .());
-		if(type.IsValueType)
+		if(type.IsValueType || (type.IsPointer && type.UnderlyingType.IsPrimitive))
 		{
 			string.Append("(.)");
 		}
@@ -37,7 +37,7 @@ internal static class CollagenMethods
 	private static mixin Adapt(Type type, String string)
 	{
 		let typeStr = type.GetFullName(.. scope:: .());
-		if(type.IsValueType)
+		if(type.IsValueType || (type.IsPointer && type.UnderlyingType.IsPrimitive))
 		{
 			string.Append("(.)");
 		}
