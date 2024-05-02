@@ -34,9 +34,9 @@ public struct CollagenInterface<T>
 			CollagenMethods.GetCollagenName(m, name);
 
 			ctor.Append(scope $"{name} = => def__{name}; ");
-			body.Append(scope $"public function {m.IsConstructor ? m.DeclaringType.GetFullName(.. scope . ()) : Collagen.TypeFor(m.ReturnType, ..scope .())}(");
+			body.Append(scope $"public function {Collagen.TypeFor(m.ReturnType, ..scope .())}(");
 
-			if(!m.IsStatic && !m.IsConstructor)
+			if(!m.IsStatic)
 			{
 				if(m.DeclaringType.IsValueType)
 				{
@@ -50,7 +50,7 @@ public struct CollagenInterface<T>
 			}
 			for(int i < m.ParamCount)
 			{
-				if(i > 0 || (!m.IsStatic && !m.IsConstructor))
+				if(i > 0 || !m.IsStatic)
 				{
 					body.Append(", ");
 				}

@@ -91,8 +91,8 @@ internal static class CollagenMethods
 			accessor = method.Name; 
 		}
 
-		str.Append(scope $"public static {method.IsConstructor ? method.DeclaringType.GetFullName(.. scope .()) : Collagen.TypeFor(method.ReturnType, .. scope .())} def__{GetCollagenName(method, .. scope .())}(");
-		if(!method.IsStatic && !method.IsConstructor)
+		str.Append(scope $"public static {Collagen.TypeFor(method.ReturnType, .. scope .())} def__{GetCollagenName(method, .. scope .())}(");
+		if(!method.IsStatic)
 		{
 			if(method.DeclaringType.IsValueType)
 			{
@@ -106,7 +106,7 @@ internal static class CollagenMethods
 		}
 		for(int i < method.ParamCount)
 		{
-			if(i > 0 || (!method.IsStatic && !method.IsConstructor))
+			if(i > 0 || !method.IsStatic)
 			{
 				str.Append(", ");
 			}
@@ -114,9 +114,13 @@ internal static class CollagenMethods
 		}
 		str.Append(")\n{\n");
 
-		if(method.ReturnType != typeof(void) || method.IsConstructor)
+		if(method.ReturnType != typeof(void))
 		{
 			str.Append("let __callret = ");
+		}
+		else if(method.IsConstructor)
+		{
+			str.Append("*__self = ");
 		}
 
 		if(method.IsStatic)
@@ -181,11 +185,6 @@ internal static class CollagenMethods
 				str.Append("__callret");
 			}
 			str.Append(";");
-		}
-
-		if(method.IsConstructor)
-		{
-			str.Append("\nreturn __callret;");
 		}
 
 		str.Append("\n}");
