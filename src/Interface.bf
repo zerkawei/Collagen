@@ -7,7 +7,7 @@ namespace Collagen;
 [CRepr]
 public struct CollagenInterface<T>
 {
-	public static Self* Default = new .(null) ~ delete _;
+	public static Self* Default = new .() ~ delete _;
 
 	[Comptime, OnCompile(.TypeInit)]
 	public static void OnTypeInit()
@@ -16,7 +16,7 @@ public struct CollagenInterface<T>
 		bool foreignImplAllowed = typeof(T).GetCustomAttribute<AllowForeignImplementationAttribute>() case .Ok;
 		let methods = typeof(T).GetMethods();
 
-		let ctor = scope String("public this(void* _){ ");
+		let ctor = scope String("public this{ ");
 		let body = scope String();
 
 		if(foreignImplAllowed)
