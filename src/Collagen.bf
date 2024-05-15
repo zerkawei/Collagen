@@ -102,33 +102,92 @@ public static class Collagen
 	[Comptime]
 	internal static void TypeFor(Type type, String string)
 	{
+		int starCount = 0;
+		GetExportedTypeOf(type, ref starCount).GetFullName(string);
+		string.Append('*', starCount);
+	}
+
+	[Comptime]
+	internal static void CTypeFor(Type type, String string)
+	{
+		int starCount = 0;
+		let t = GetExportedTypeOf(type, ref starCount);
+		switch(t)
+		{
+		case typeof(bool):
+			string.Append("bool");
+		case typeof(int16):
+			string.Append("short");
+		case typeof(uint16):
+			string.Append("unsinged short");
+		case typeof(int32):
+			string.Append("int");
+		case typeof(uint32):
+			string.Append("unsigned int");
+		case typeof(int64):
+			string.Append("long long");
+		case typeof(uint64):
+			string.Append("unsigned long long");
+		case typeof(int):
+			string.Append("intptr_t");
+		case typeof(uint):
+			string.Append("uintptr_t");
+		case typeof(uint):
+			string.Append("size_t");
+		case typeof(int8) : fallthrough;
+		case typeof(char8):
+			string.Append("char");
+		case typeof(uint8):
+			string.Append("unsigned char");
+
+#if BF_PLATFORM_WINDOWS
+		case typeof(char16):
+			string.Append("wchar_t");
+#else
+		case typeof(char32):
+			string.Append("wchar_t");
+#endif
+
+		case typeof(float):
+			string.Append("float");
+		case typeof(double):
+			string.Append("double");
+		case typeof(void):
+			string.Append("void");
+
+		default:
+			if(type.IsStruct)
+			{
+				string.Append("struct ");
+				string.Append(t.GetFullName(.. scope .()).Replace('.', '_'));
+			}
+		}
+
+		string.Append('*', starCount);
+	}
+
+	[Comptime]
+	internal static Type GetExportedTypeOf(Type type, ref int starCount)
+	{
 		if(type.GetCustomAttribute<APICastAttribute>() case .Ok(let att))
 		{
-			att.Target.GetFullName(string);
+			return att.Target;
 		}
-		/*
-		else if(type.IsStruct && !type.IsUnion && type.GetCustomAttribute<CReprAttribute>() case .Err)
+		if(type.IsValueType || (type.IsEnum && type.IsUnion))
 		{
-			string.Append(scope $"CRepr<{type.GetFullName(.. scope .())}>");
+			return type;
 		}
-		*/
-		else if(type.IsValueType || (type.IsEnum && type.IsUnion))
+		if(type.IsEnum)
 		{
-			type.GetFullName(string);
+			return type.UnderlyingType;
 		}
-		else if(type.IsEnum)
+
+		starCount = 1;
+		if(type is RefType || type.IsPointer && type.UnderlyingType.IsPrimitive)
 		{
-			type.UnderlyingType.GetFullName(string);
+			return type.UnderlyingType;
 		}
-		else if(type is RefType || type.IsPointer && type.UnderlyingType.IsPrimitive)
-		{
-			type.UnderlyingType.GetFullName(string);
-			string.Append("*");
-		}
-		else
-		{
-			string.Append("void*");
-		}
+		return typeof(void);
 	}
 }
 
