@@ -1,6 +1,13 @@
 using Collagen;
 using System;
 using System.IO;
+
+namespace System
+{
+	[APICast(typeof(CRepr<StringView>))]
+	public extension StringView {}
+}
+
 namespace CollagenTest;
 
 [AllowForeignImplementation, CollagenName("IPlugin")]
@@ -26,7 +33,15 @@ public struct HostInformation
 {
 	public this(function void*(char8*) gi) { GetInterface = gi; }
 	public function void*(char8*) GetInterface;
-} 
+}
+
+public class GenerateHeader
+{
+	public static void Main()
+	{
+		File.WriteAllText("collagentest.h", CollagenHeader.Create(typeof(Thing), typeof(IPlugin)));
+	}
+}
 
 public class Program
 {
