@@ -11,7 +11,7 @@ public class CollagenHeader
 		let str     = scope String();
 		let structs = scope HashSet<Type>();
 
-		str.Append("#pragma once\n#include <stdint.h>\n#include <stddef.h>\n\n");
+		str.Append("#pragma once\n#include <stdint.h>\n#include <stddef.h>\n\nstruct CollagenObject {\n  void* vtable;\n  void* data;\n};\n\n");
 
 		for(let t in types)
 		{
@@ -145,6 +145,11 @@ public class CollagenHeader
 		str.Append("struct ");
 		str.Append(Mangle(.. type.GetFullName(.. scope .())));
 		str.Append("_i {\n");
+
+		if(type.GetCustomAttribute<AllowForeignImplementationAttribute>() case .Ok)
+		{
+			str.Append("  void*(*__adapt)(struct CollagenObject);\n");
+		}
 
 		for(let m in type.GetMethods())
 		{

@@ -1,39 +1,15 @@
 #include <stdbool.h>
+#include "collagentest.h"
 
 #define EXPORT __declspec(dllexport)
 
-typedef struct _Plugin Plugin;
+typedef struct CollagenTest_IPlugin_i IPlugin;
+typedef struct Collagen_CReprgSystem_StringViewc StringView;
+typedef struct CollagenTest_Thing_i Thing;
 
 typedef struct _HostInfo
 {
     void*(*getInterface)(char*);
 } HostInfo;
 
-typedef struct _StringView
-{
-    char* ptr;
-    int   len;
-} StringView;
-
 EXPORT bool plug_entry (HostInfo, void**);
-
-typedef struct PluginInterface
-{
-    void*(*adapt)(Plugin);
-    StringView(*getName)(void*);
-    StringView(*getVersion)(void*);
-    void(*apply)(void*, void*);
-    int(*applyInt)(void*, int);
-} IPlugin;
-
-struct _Plugin
-{
-    IPlugin* interface;
-    void*    ptr;
-};
-
-typedef struct ThingInterface
-{
-    int(*getValue)(void*);
-    void(*setValue)(void*, int);
-} Thing;
