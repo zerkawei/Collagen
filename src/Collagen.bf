@@ -119,7 +119,7 @@ public static class Collagen
 		case typeof(int16):
 			string.Append("short");
 		case typeof(uint16):
-			string.Append("unsinged short");
+			string.Append("unsigned short");
 		case typeof(int32):
 			string.Append("int");
 		case typeof(uint32):
@@ -159,7 +159,7 @@ public static class Collagen
 			if(type.IsStruct)
 			{
 				string.Append("struct ");
-				string.Append(t.GetFullName(.. scope .()).Replace('.', '_'));
+				string.Append(t.GetFullName(.. scope .())..Replace('.', '_'));
 			}
 		}
 
@@ -188,6 +188,80 @@ public static class Collagen
 			return type.UnderlyingType;
 		}
 		return typeof(void);
+	}
+
+	[Comptime(ConstEval=true)]
+	public static String CStructDecl<T>() where T : struct
+	{
+		let str  = scope String();
+		let type = typeof(T);
+
+		str.Append("struct ");
+		str.Append(type.GetFullName(.. scope .())..Replace('.', '_'));
+		str.Append(" {\n");
+
+		if(type.GetCustomAttribute<CReprAttribute>() case .Ok)
+		{
+			for(let field in type.GetFields(.Instance | .Public | .NonPublic))
+			{
+				CTypeFor(field.FieldType, str);
+				str.Append(" ");
+				str.Append(field.Name);
+				str.Append(";\n");
+			}
+		}
+		else
+		{
+			str.Append("char[");
+			str.Append(type.Stride);
+			str.Append("] data;\n");
+		}
+
+		str.Append("}");
+
+		return str;
+	}
+
+	[Comptime(ConstEval=true)]
+	public static String CInterfaceDecl<T>()
+	{
+		let str  = scope String();
+		let type = typeof(T);
+
+		str.Append("struct ");
+		str.Append(type.GetFullName(.. scope .())..Replace('.', '_'));
+		str.Append("_i {\n");
+
+		for(let m in type.GetMethods())
+		{
+			if(m.Name.IsEmpty || (m.IsConstructor && !m.DeclaringType.IsValueType) || m.IsDestructor || !m.IsPublic || m.DeclaringType != type || m.GenericArgCount > 0 || m.IsMixin) continue;
+
+			CTypeFor(m.ReturnType, str);
+			str.Append(" (*");
+			CollagenMethods.GetCollagenName(m, str);
+			str.Append(")(");
+
+			if(!m.IsStatic)
+			{
+				CTypeFor(typeof(alloctype(T)), str);
+				str.Append("__self");
+			}
+			for(int i < m.ParamCount)
+			{
+				if(i > 0 || !m.IsStatic)
+				{
+					str.Append(", ");
+				}
+				CTypeFor(m.GetParamType(i), str);
+				str.Append(" ");
+				str.Append(m.GetParamName(i));
+			}
+			str.Append(");\n");
+		}
+		
+		str.Append("}");
+
+		return str;
 	}
 }
 
