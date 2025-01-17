@@ -1,13 +1,14 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.IO;
 using internal Collagen;
 namespace Collagen;
 
 [AttributeUsage(.Interface)]
 public struct AllowForeignImplementationAttribute : Attribute {}
 
-[AttributeUsage(.Method | .Types)]
+[AttributeUsage(.Method)]
 public struct CollagenNameAttribute : Attribute
 {
 	public StringView Name;
@@ -19,6 +20,13 @@ public struct APICastAttribute : Attribute
 {
 	public Type Target;
 	public this(Type target) {Target = target;}
+}
+
+[AttributeUsage(.Types)]
+public struct CollagenExportAttribute : Attribute
+{
+	public StringView Name;
+	public this(StringView name = "") { Name = name; }
 }
 
 [CRepr]
@@ -78,12 +86,7 @@ public static class Collagen
 		return null;
 	}
 
-	[Inline]
-	public static void Export<T>() => Export(TypeName<T>(), CollagenInterface<T>.Default);
-	public static void Export (StringView name, void* iface) => ExportedInterfaces.Add(name, iface);
-
-	[Comptime(ConstEval=true)]
-	private static String TypeName<T>() => typeof(T).GetCustomAttribute<CollagenNameAttribute>() case .Ok(let att) ? scope .(att.Name) : typeof(T).GetFullName(.. scope .());
+	public static void Export(StringView name, void* iface) => ExportedInterfaces.Add(name, iface);
 
 	[Comptime]
 	internal static void FieldName(FieldInfo f, String string)
@@ -130,5 +133,39 @@ public static class Collagen
 		}
 		return typeof(void);
 	}
+
+	[Comptime, OnCompile(.TypeInit)]
+	static void GenerateExports()
+	{
+		Compiler.EmitTypeBody(typeof(Self), "static this\n{\n");
+		for(let t in TypeDeclaration.TypeDeclarations)
+		{
+			if(t.GetCustomAttribute<CollagenExportAttribute>() case .Ok(let export))
+			{
+				Compiler.EmitTypeBody(typeof(Self), scope $"Collagen.Export(\"{export.Name.Length > 0 ? export.Name : t.GetFullName(.. scope .())}\", CollagenInterface<comptype({(int)t.TypeId})>.Default);\n");
+			}
+		}
+		Compiler.EmitTypeBody(typeof(Self), "}");
+	}
+
+#if COLLAGEN_HEADER_GEN
+	[Comptime, OnCompile(.TypeDone)]
+	static void GenerateHeader()
+	{
+		List<Type> types = scope .();
+		for(let t in TypeDeclaration.TypeDeclarations)
+		{
+			if(t.HasCustomAttribute<CollagenExportAttribute>())
+			{
+				types.Add(t.ResolvedType);
+			}
+		}
+
+		if(types.Count > 0)
+		{
+			File.WriteAllText("collagen.h", CollagenHeader.Create(types.CopyTo(.. scope:: Type[types.Count])));
+		}
+	}
+#endif
 }
 

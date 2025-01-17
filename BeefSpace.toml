@@ -3,6 +3,7 @@ Projects = {CollagenTest = {Path = "CollagenTest"}, Collagen = {Path = "."}}
 
 [Workspace]
 StartupProject = "CollagenTest"
+PreprocessorMacros = ["COLLAGEN_HEADER_GEN"]
 
 [Configs.Test.Win32]
 ConfigSelections = {CollagenTest = {Config = "Debug"}}

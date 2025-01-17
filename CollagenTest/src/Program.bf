@@ -10,17 +10,17 @@ namespace System
 
 namespace CollagenTest;
 
-[AllowForeignImplementation, CollagenName("IPlugin")]
+[AllowForeignImplementation, CollagenExport("IPlugin")]
 public interface IPlugin
 {
 	public StringView Name    { [CollagenName("getName")]get; }
 	public StringView Version { [CollagenName("getVersion")]get; }
-
+	
 	public void Apply(Thing t);
 	public int  Apply(int i);
 }
 
-[CollagenName("Thing")]
+[CollagenExport("Thing")]
 public class Thing
 {
 	public int Value { get; set; }
@@ -35,21 +35,10 @@ public struct HostInformation
 	public function void*(char8*) GetInterface;
 }
 
-public class GenerateHeader
-{
-	public static void Main()
-	{
-		File.WriteAllText("collagentest.h", CollagenHeader.Create(typeof(Thing), typeof(IPlugin)));
-	}
-}
-
 public class Program
 {
 	public static void Main()
 	{
-		Collagen.Export<Thing>();
-		Collagen.Export<IPlugin>();
-
 		let thing = scope Thing();
 		thing.Value = 1;
 		if(LoadPlugin("plugin.dll") case .Ok(let plugin))

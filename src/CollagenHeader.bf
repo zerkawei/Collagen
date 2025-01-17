@@ -5,10 +5,12 @@ namespace Collagen;
 
 public class CollagenHeader
 {
-	[Comptime(ConstEval=true)]
-	public static String Create(params Type[] types)
+	[Comptime]
+	public static String Create(params Type[] types) => Create(types);
+	[Comptime]
+	public static String Create(Type[] types)
 	{
-		let str     = scope String();
+		let str     = new String();
 		let structs = scope HashSet<Type>();
 
 		str.Append("#pragma once\n#include <stdint.h>\n#include <stddef.h>\n\nstruct CollagenObject {\n  void* vtable;\n  void* data;\n};\n\n");

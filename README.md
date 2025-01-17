@@ -8,11 +8,13 @@ A basic usage example is provided at `CollagenTest/` and `CollagenTestC/`.
 `CollagenInterface<T>` provides a CRepr interface to the public methods of the type `T`. `CollagenInterface<T>.Default` is a pointer to the instance of the interface allowing calls to Beef implementations of the type.
 
 ### Exporting
-The interfaces can be exported using the `Collagen.Export` method. They are then added to a dictionary that foreign code can access with the `Collegen.GetInterface` method.
+The interfaces can be exported using the `CollagenExport` attribute or `Collagen.Export` method. They are then added to a dictionary that foreign code can access with the `Collegen.GetInterface` method.
 
 ```csharp
+[CollagenExport]
+public class ClassName { ... }
+
 Collagen.Export("ClassName", &iface); // Adds an entry with the specified key value pair.
-Collagen.Export<ClassName>(); // Equivalent* to Collagen.Export("Namespace.ClassName", CollagenInterface<ClassName>.Default); 
 ```
 
 ### Foreign Implementation
@@ -21,10 +23,10 @@ The `AllowForeignImplementation` attribute permits implementation of an interfac
 (Note: The foreign code owns the memory allocated for the CollagenAdapter).
 
 ## Renaming
-Types and method can have the `CollagenName` attribute to override the default name used in generated code.
+Methods can have the `CollagenName` attribute to override the default name used in generated code. For types, the `CollagenExport` can take an additional argument to rename the exported interface.
 
 ```csharp
-[CollagenName("thing")]
+[CollagenExport("thing")]
 public class Thing 
 {
     [CollagenName("function_x")] 
@@ -62,3 +64,5 @@ The `CollagenHeader.Create` method creates a C header string containing the spec
 ```csharp
 CollagenHeader.Create(typeof(Thing), typeof(Thing2)); // Evaluated at compile-time
 ```
+
+The compile time header generation can be enabled with the `COLLAGEN_HEADER_GEN` preprocessor define.
