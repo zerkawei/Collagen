@@ -23,7 +23,7 @@ public struct CollagenInterface<T>
 		{
 			ctor.Append("__adapt = => def____adapt;");
 			body.Append(scope $"public function void*(CollagenObject<{typeof(T).GetFullName(.. scope .())}>) __adapt;");
-			body.Append(scope $"public static void* def____adapt(CollagenObject<{typeof(T).GetFullName(.. scope .())}> obj) => System.Internal.UnsafeCastToPtr(new CollagenAdapter<{typeof(T).GetFullName(.. scope .())}>(obj));\n");
+			body.Append(scope $"public static void* def____adapt(CollagenObject<{typeof(T).GetFullName(.. scope .())}> obj) => System.Internal.UnsafeCastToPtr(new:gCRTAlloc CollagenAdapter<{typeof(T).GetFullName(.. scope .())}>(obj));\n");
 		}
 
 		for(let m in methods)
