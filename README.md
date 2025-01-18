@@ -65,4 +65,4 @@ The `CollagenHeader.Create` method creates a C header string containing the spec
 CollagenHeader.Create(typeof(Thing), typeof(Thing2)); // Evaluated at compile-time
 ```
 
-The compile time header generation can be enabled with the `COLLAGEN_HEADER_GEN` preprocessor define.
+The compile time header generation can be enabled with the `Debug w/ Header` or `Release w/ Header` build configurations. The generated header will be in the build directory of the current project.

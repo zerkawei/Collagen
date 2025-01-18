@@ -7,3 +7,15 @@ StartupObject = "Collagen.Program"
 
 [Configs.Debug.Win64]
 BuildKind = "StaticLib"
+
+[Configs."Debug w/ Header".Win64]
+BeefLibType = "Static"
+PostBuildCmds = ["CopyToDependents(\"$(ProjectDir)/collagen.h\")", "DeleteFile(\"$(ProjectDir)/collagen.h\")"]
+PreprocessorMacros = ["DEBUG", "COLLAGEN_HEADER_GEN"]
+
+[Configs."Debug w/ Header".Win32]
+BeefLibType = "Static"
+
+[Configs."Release w/ Header".Win64]
+PostBuildCmds = ["CopyToDependents(\"$(ProjectDir)/collagen.h\")", "DeleteFile(\"$(ProjectDir)/collagen.h\")"]
+PreprocessorMacros = ["RELEASE", "COLLAGEN_HEADER_GEN"]
